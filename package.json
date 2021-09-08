@@ -1,0 +1,21 @@
+{
+  "name": "mine-flayer-bot",
+  "version": "0.0.0",
+  "description": "MineFlayerBot",
+  "main": "app.js",
+  "author": {
+    "name": ""
+  },
+  "dependencies": {
+    "minecraft-data": "^2.93.0",
+    "minecrafthawkeye": "^1.2.7",
+    "mineflayer": "^3.11.0",
+    "mineflayer-armor-manager": "^1.4.2",
+    "mineflayer-auto-eat": "^2.3.3",
+    "mineflayer-pathfinder": "^1.7.0",
+    "mineflayer-pvp": "^1.0.2",
+    "mineflayer-tool": "^1.1.0",
+    "prismarine-viewer": "^1.19.3",
+    "vec3": "^0.1.7"
+  }
+}
