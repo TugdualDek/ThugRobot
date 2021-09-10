@@ -6,18 +6,23 @@ const pvp = require('mineflayer-pvp').plugin
 const toolPlugin = require('mineflayer-tool').plugin
 const armorManager = require('mineflayer-armor-manager')
 
-
+// création du bot et connexion au bon serveur avec le bon port
 
 const bot = mineflayer.createBot({
     host: 'localhost',
-    port: '62140',
+    port: '59129',
     username: 'ThugRobot'
 })
+
+
+// chargement des différents plugins
 
 bot.loadPlugin(pathfinder)
 bot.loadPlugin(pvp)
 bot.loadPlugin(toolPlugin)
 bot.loadPlugin(armorManager)
+
+// chargement des minecraft-data
 
 let mcData
 bot.once('spawn', () => {
@@ -29,24 +34,19 @@ bot.once('spawn', () => {
     })
 })
 
+// Début des vérifications des messages envoyés dans le tchat
+
 bot.on('chat', (username, message) => {
     bot.armorManager.equipAll()
 
     if (username === bot.username) return
 
-    if (message === 'fight me') {
-        const player = bot.players[username]
+    if (message.indexOf('fight') >= 0) {
+        const msg = message.split(' ')
+        const player = bot.players['Thug2000']
+        const arg1 = msg[1];
 
-        if (!player) {
-            bot.chat('je ne peux pas vous voir !')
-            return
-        }
-
-        bot.pvp.attack(player.entity)
-    }
-
-    if (message === 'stop') {
-        bot.pvp.stop()
+        fight(arg1, player)
     }
 
     if (message.indexOf('drop') >= 0) {
@@ -75,17 +75,51 @@ bot.on('chat', (username, message) => {
 
         bestTool()
     }
+
+    if (message.indexOf('goto_bed') >= 0) {
+        goToBed()
+    }
+
+    if (message.indexOf('sleep') >= 0) {
+        sleep()
+    }
 })
 
+
+// Début des différentes fonctions
+
+function fight(command, player) {
+    const sword = bot.inventory.items().find(item => item.name.includes('sword'))  // check s'il y a une épéé dans son inventaire
+    if (sword) bot.equip(sword, 'hand')  // si c'est le cas alors il va la mettre dans sa main
+
+    if (command === 'me') {  // si je veux qu'il m'attaque moi
+        if (!player) {
+            bot.chat('je ne peux pas vous voir !')
+            return
+        }
+
+        bot.pvp.attack(player.entity)  // il va attaquer la personne qui a dit le message
+    } else if (command === 'stop') {
+        bot.pvp.stop()  // il arrete
+    } else {
+        if (!command) {
+            bot.chat('Veuillz préciser le joueur que je dois combattre !')
+        }
+
+        const player_attack = bot.players[command];
+        bot.pvp.attack(player_attack.entity)  // il attaque la personne qui a été précisée
+    }
+}
+
 function dropItem(item) {
-    const items1 = bot.inventory.items() // get the items
+    const items1 = bot.inventory.items() // les items de l'inventaire
 
     var countNo = 0;
 
     if (item === 'all') {
         const dropper = (i) => {
-            if (!items1[i]) return // if we dropped all items, stop.
-            bot.tossStack(items1[i], () => dropper(i + 1)) // drop the item, then wait for a response from the server and drop another one.
+            if (!items1[i]) return // isi tous les items ont été drops on arrete
+            bot.tossStack(items1[i], () => dropper(i + 1)) // on drop les items un a un
         }
         dropper(0)
     } else {
@@ -127,8 +161,6 @@ function comeAtPlayer() {
 
 function locateDiamond(block) {
 
-    const mcData = require('minecraft-data')(bot.version)
-
     const movements = new Movements(bot, mcData)
 
     bot.pathfinder.setMovements(movements)
@@ -168,6 +200,47 @@ function bestTool() {
             console.log(err)
         }
     })
+
+}
+
+function goToBed() {
+    const movements = new Movements(bot, mcData)
+
+    bot.pathfinder.setMovements(movements)
+
+    const bedBlockPos = bot.findBlock({
+        matching: mcData.blocksByName['white_bed'].id, // 355
+        maxDistance: 64
+    })
+
+    if (!bedBlockPos) {
+        bot.chat('Il n y a pas de lit à proximité !')
+    } else {
+        const x = bedBlockPos.position.x -1
+        const y = bedBlockPos.position.y
+        const z = bedBlockPos.position.z - 1
+
+        // bot.chat('Il y a un lit aux coordonnées : x ' + x + ' y ' + y + ' z ' + z);
+
+        const goal = new GoalBlock(x, y, z)
+
+        bot.pathfinder.setGoal(goal)
+
+    }
+
+}
+
+function sleep() {
+    const bedBlockPos = bot.findBlock({
+        matching: mcData.blocksByName['white_bed'].id, // 355
+        maxDistance: 64
+    })
+
+    bed = bot.blockAt(bedBlockPos.position);
+
+    bot.lookAt(bed);
+
+    bot.sleep(bed);
 }
 
 
